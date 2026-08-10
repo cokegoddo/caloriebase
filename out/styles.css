@@ -1,0 +1,31 @@
+:root{--accent:#1a7f37;--ink:#1f2328;--muted:#6e7781;--line:#d0d7de;--bg:#f6f8fa}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+.site-header{background:#fff;border-bottom:1px solid var(--line);padding:14px 0}
+.site-header .wrap{display:flex;align-items:center;justify-content:space-between}
+.brand{font-weight:700;font-size:18px;color:var(--ink);text-decoration:none}
+nav a{color:var(--muted);text-decoration:none;font-size:14px}
+nav a:hover{color:var(--accent)}
+.crumbs{font-size:13px;color:var(--muted);margin:18px 0 4px}
+h1{font-size:28px;margin:8px 0 6px}
+h2{font-size:19px;margin:0 0 10px}
+.lead{color:var(--muted);margin:0 0 20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin:0 0 18px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}.small{font-size:13px}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.cat{display:block;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--ink);background:#fff}
+.cat:hover{border-color:var(--accent)}
+.cat-name{display:block;font-weight:600}
+.food-list{columns:2;column-gap:36px;margin:0;padding-left:20px;font-size:15px}
+.food-list li{margin:0 0 6px;break-inside:avoid}
+.related{columns:2;column-gap:36px;margin:0;padding-left:20px;font-size:15px}
+.related li{margin:0 0 6px;break-inside:avoid}
+details.faq{border:1px solid var(--line);border-radius:6px;margin:0 0 8px;padding:8px 12px;background:#fff}
+details.faq summary{cursor:pointer;font-weight:600}
+details.faq p{margin:8px 0 2px;color:var(--ink)}
+.site-footer{border-top:1px solid var(--line);background:#fff;margin-top:28px;padding:18px 0;font-size:14px}
+@media(max-width:560px){.food-list,.related{columns:1}nav{display:none}}

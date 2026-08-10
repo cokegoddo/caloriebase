@@ -1,0 +1,6 @@
+# raw dataset archive (keep extracted data/)
+data/SR-Leg_ASC.zip
+
+# python
+__pycache__/
+*.pyc
