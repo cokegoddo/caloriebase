@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://caloriebase.pages.dev/sitemap.xml
+Sitemap: https://caloriebase.austinnu22.workers.dev/sitemap.xml

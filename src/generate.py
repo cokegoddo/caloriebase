@@ -24,7 +24,7 @@ import shutil
 import sys
 from html import escape
 
-BASE_URL = "https://caloriebase.pages.dev"
+BASE_URL = "https://caloriebase.austinnu22.workers.dev"
 SITE_NAME = "CalorieBase"
 SITE_TAGLINE = "Calorie & nutrition database for thousands of foods"
 
