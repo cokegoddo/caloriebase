@@ -787,7 +787,6 @@ def main():
     sitemap = []
     sitemap.append(("0.9", BASE_URL + "/"))
     sitemap.append(("0.6", BASE_URL + "/popular/"))
-    sitemap.append(("0.7", BASE_URL + "/category/"))
 
     cat_slugs = {}
     for gcode, flist in by_group.items():
