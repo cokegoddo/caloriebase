@@ -783,6 +783,7 @@ def main():
         "  Cache-Control: public, max-age=3600\n"
     )
     write_file(os.path.join(out, "_headers"), headers)
+    write_file(os.path.join(out, "google61a0cf73666fd148.html"), "google-site-verification: google61a0cf73666fd148.html")
 
     sitemap = []
     sitemap.append(("0.9", BASE_URL + "/"))
