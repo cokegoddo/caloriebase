@@ -10,6 +10,7 @@
   var CATS = [];
   var NORM = [];
   var TOK = [];
+  var SEG = [];
   var ready = false;
 
   var state = { settings: null, days: {} };
@@ -37,6 +38,16 @@
     });
   }
   function norm(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function plural(w) {
+    if (w.length > 4 && w.slice(-3) === 'ies') return w.slice(0, -3) + 'y';
+    if (/(ches|shes|sses|xes|zes|oes)$/.test(w)) return w.slice(0, -2);
+    if (w.slice(-1) === 's' && w.slice(-2) !== 'ss') return w.slice(0, -1);
+    return w;
+  }
+  function baseKey(seg) {
+    var n = norm(seg);
+    return n ? n.split(' ').map(plural).join(' ') : '';
+  }
   function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
   function addDays(dk, n) { var d = parseISO(dk); d.setDate(d.getDate() + n); return iso(d); }
 
@@ -104,11 +115,13 @@
             p: o.p == null ? 0 : +o.p,
             cb: o.cb == null ? 0 : +o.cb,
             f: o.f == null ? 0 : +o.f,
+            pop: o.pop == null ? 0 : +o.pop,
             sv: o.sv || null
           };
         });
         NORM = DB.map(function (o) { return norm(o.n); });
         TOK = DB.map(function (o) { return norm(o.n).split(' ').filter(Boolean); });
+        SEG = DB.map(function (o) { return o.n.split(',').map(baseKey); });
         var seen = {};
         DB.forEach(function (o) { if (o.c && !seen[o.c]) { seen[o.c] = 1; CATS.push(o.c); } });
         CATS.sort();
@@ -123,6 +136,7 @@
   // simple generic foods ("Milk, whole") beat long/branded/processed entries.
   function searchDB(q, cat, limit) {
     var qs = q ? norm(q).split(' ').filter(Boolean) : [];
+    var qn = q ? baseKey(q) : '';
     var out = [];
     for (var i = 0; i < DB.length; i++) {
       var o = DB[i];
@@ -144,6 +158,10 @@
         score -= found;
       }
       if (!ok) continue;
+      var segs = SEG[i];
+      if (segs.length && segs[0] === qn) score += 14;
+      else if (segs.length > 1 && segs[1] === qn) score += 9;
+      score += o.pop;
       score -= 0.04 * o.n.length;
       out.push({ o: o, s: score });
     }

@@ -233,6 +233,47 @@ def pick_primary(variants):
     return sorted(variants, key=score)[0]
 
 
+# Words that hint at a common, everyday form of a food vs. an unusual or
+# heavily processed one. Used only as a gentle tiebreak so generic searches
+# ("egg") surface the everyday form ("Egg, whole, ...") instead of a rarity
+# like "Egg, yolk, dried". Deliberately small and hand-tuned.
+_COMMON_GOOD = (
+    "raw", "cooked", "fresh", "whole", "roasted", "boiled", "baked",
+    "grilled", "steamed", "broiled", "fried", "scrambled", "poached", "omelet",
+)
+_COMMON_BAD = (
+    "dried", "dehydrated", "powder", "freeze", "canned", "frozen", "pickled",
+    "brined", "cured", "smoked", "concentrate", "syrup", "jerky", "cand",
+    "imitation", "substitute", "babyfood", "infant", "formula", "restaurant",
+    "nfs", "drained", "solids", "fortified", "unenriched", "leavening",
+    "shortening", "without", "roll", "deli", "sliced", "tenders", "breaded",
+    "prepackaged", "flavored", "seasoned", "meatless", "variety", "by-product",
+    "feet", "giblet", "gizzard", "neck", "brain", "tripe",
+)
+_WORD_RE = re.compile(r"[a-z0-9]+")
+_ACRO_RE = re.compile(r"[A-Z]{3,}")
+
+
+def commonness(name):
+    """0-centered score of how everyday a food form is (higher = more common)."""
+    lower = name.lower()
+    toks = _WORD_RE.findall(lower)
+    parts = name.split(",")
+    s = -(len(parts) - 1) * 2.0
+    for w in _COMMON_GOOD:
+        if any(t == w or t.startswith(w) for t in toks):
+            s += 3
+    for w in _COMMON_BAD:
+        if any(t == w or t.startswith(w) for t in toks):
+            s -= 5
+    if "includes" in lower:
+        s -= 5
+    for tok in _ACRO_RE.findall(name):
+        if tok != "USDA":
+            s -= 8
+    return max(-30.0, min(16.0, s))
+
+
 def to_slug(name):
     slug = name.lower()
     slug = slug.replace("&", " and ")
@@ -834,6 +875,7 @@ def main():
             "u": food.url,
             "c": groups.get(food.group_code, ""),
             "k": round(food.kcal, 1),
+            "pop": round(commonness(food.name), 1),
         }
         for key, nno in (("p", "203"), ("cb", "205"), ("f", "204")):
             val = nut.get(nno)
