@@ -9,6 +9,7 @@
   var DB = [];
   var CATS = [];
   var NORM = [];
+  var TOK = [];
   var ready = false;
 
   var state = { settings: null, days: {} };
@@ -107,6 +108,7 @@
           };
         });
         NORM = DB.map(function (o) { return norm(o.n); });
+        TOK = DB.map(function (o) { return norm(o.n).split(' ').filter(Boolean); });
         var seen = {};
         DB.forEach(function (o) { if (o.c && !seen[o.c]) { seen[o.c] = 1; CATS.push(o.c); } });
         CATS.sort();
@@ -116,25 +118,44 @@
       });
   }
 
+  // Ranked search: every query word must prefix-match a word in the food name
+  // (so "apple" finds "Apples" but not "pineapple"), then results are scored so
+  // simple generic foods ("Milk, whole") beat long/branded/processed entries.
   function searchDB(q, cat, limit) {
-    var nq = norm(q);
-    var qWords = nq ? nq.split(' ').filter(Boolean) : [];
+    var qs = q ? norm(q).split(' ').filter(Boolean) : [];
     var out = [];
     for (var i = 0; i < DB.length; i++) {
       var o = DB[i];
       if (cat && o.c !== cat) continue;
-      if (qWords.length) {
-        var hay = NORM[i];
-        var ok = true;
-        for (var w = 0; w < qWords.length; w++) {
-          if (hay.indexOf(qWords[w]) === -1) { ok = false; break; }
+      if (!qs.length) { out.push({ o: o, s: 0 }); continue; }
+      var toks = TOK[i];
+      var score = 0, ok = true;
+      for (var w = 0; w < qs.length; w++) {
+        var word = qs[w];
+        var found = -1;
+        for (var t = 0; t < toks.length; t++) {
+          if (toks[t].indexOf(word) === 0) { found = t; break; }
         }
-        if (!ok) continue;
+        if (found === -1) { ok = false; break; }
+        score += found === 0 ? 10 : (found === 1 ? 5 : 1);
+        var tk = toks[found];
+        if (tk === word || tk === word + 's' || tk === word + 'es') score += 4;
+        score -= 1.5 * (tk.length - word.length);
+        score -= found;
       }
-      out.push(o);
-      if (out.length >= limit) break;
+      if (!ok) continue;
+      score -= 0.04 * o.n.length;
+      out.push({ o: o, s: score });
     }
-    return out;
+    if (qs.length) {
+      out.sort(function (a, b) {
+        return b.s - a.s || a.o.n.length - b.o.n.length ||
+          (a.o.n.toLowerCase() < b.o.n.toLowerCase() ? -1 : 1);
+      });
+    }
+    var res = [];
+    for (var k = 0; k < out.length && res.length < limit; k++) res.push(out[k].o);
+    return res;
   }
 
   /* ---------- view switching ---------- */
