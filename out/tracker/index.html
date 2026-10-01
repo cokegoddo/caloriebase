@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calorie &amp; Macro Tracker &mdash; CalorieBase</title>
+<meta name="description" content="Free calorie and macro tracker with 7,756 foods prebuilt. Log your meals and track calories, protein, carbs and fat against your goals. Works offline, no account.">
+<link rel="canonical" href="https://caloriebase.austinnu22.workers.dev/tracker/">
+<meta name="theme-color" content="#1a7f37">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tracker">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/">CalorieBase<span class="brand-sub">Tracker</span></a>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-view="today" type="button">Today</button>
+      <button class="tab" data-view="week" type="button">Week</button>
+      <button class="tab" data-view="goals" type="button">Goals</button>
+      <button class="tab" data-view="foods" type="button">Foods</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <section class="view" id="view-today">
+    <div class="daybar">
+      <button class="ghost" id="prevDay" type="button" aria-label="Previous day">&larr;</button>
+      <div class="daytitle">
+        <input type="date" id="dateInput" aria-label="Date">
+        <span class="muted small" id="dayLabel"></span>
+      </div>
+      <button class="ghost" id="nextDay" type="button" aria-label="Next day">&rarr;</button>
+    </div>
+
+    <section class="card summary">
+      <div class="kcal-line">
+        <span class="kcal-big" id="kcalEaten">0</span>
+        <span class="kcal-of muted">/ <span id="kcalTarget">2000</span> kcal</span>
+      </div>
+      <div class="bar big"><i id="kcalBar" style="width:0%"></i></div>
+      <div class="kcal-sub small" id="kcalLeft">&mdash;</div>
+      <div class="macros" id="macroBars"></div>
+    </section>
+
+    <section class="meals" id="meals"></section>
+
+    <p class="disclaimer muted small">Values are per-100&nbsp;g estimates from the USDA SR Legacy database and your inputs. For general information only &mdash; not medical advice.</p>
+  </section>
+
+  <section class="view hidden" id="view-week">
+    <h1 class="h1">This week</h1>
+    <section class="card"><div id="weekSummary"></div></section>
+    <section class="card">
+      <h2 class="h2">Calories by day</h2>
+      <div class="chart" id="weekChart"></div>
+    </section>
+  </section>
+
+  <section class="view hidden" id="view-goals">
+    <h1 class="h1">Goals &amp; targets</h1>
+    <section class="card">
+      <form id="goalsForm" class="form">
+        <div class="field">
+          <label for="gSex">Sex</label>
+          <select id="gSex">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="gAge">Age</label>
+          <input type="number" id="gAge" min="13" max="100" step="1" inputmode="numeric">
+        </div>
+        <div class="field span2">
+          <label>Units</label>
+          <div class="seg" id="unitSeg">
+            <button type="button" data-unit="metric" class="active">Metric</button>
+            <button type="button" data-unit="imperial">Imperial</button>
+          </div>
+        </div>
+        <div class="field span2" id="heightMetric">
+          <label for="gHeightCm">Height (cm)</label>
+          <input type="number" id="gHeightCm" min="120" max="230" step="0.5" inputmode="decimal">
+        </div>
+        <div class="field span2 hidden" id="heightImperial">
+          <label>Height</label>
+          <div class="inline">
+            <input type="number" id="gHeightFt" min="4" max="7" step="1" placeholder="ft" inputmode="numeric">
+            <input type="number" id="gHeightIn" min="0" max="11" step="1" placeholder="in" inputmode="numeric">
+          </div>
+        </div>
+        <div class="field span2" id="weightMetric">
+          <label for="gWeightKg">Weight (kg)</label>
+          <input type="number" id="gWeightKg" min="30" max="250" step="0.1" inputmode="decimal">
+        </div>
+        <div class="field span2 hidden" id="weightImperial">
+          <label for="gWeightLb">Weight (lb)</label>
+          <input type="number" id="gWeightLb" min="60" max="550" step="0.1" inputmode="decimal">
+        </div>
+        <div class="field span2">
+          <label for="gActivity">Activity level</label>
+          <select id="gActivity">
+            <option value="1.2">Sedentary &mdash; little or no exercise</option>
+            <option value="1.375">Light &mdash; exercise 1&ndash;3 days/week</option>
+            <option value="1.55">Moderate &mdash; exercise 3&ndash;5 days/week</option>
+            <option value="1.725">Active &mdash; exercise 6&ndash;7 days/week</option>
+            <option value="1.9">Very active &mdash; hard exercise + physical job</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label for="gGoal">Goal</label>
+          <select id="gGoal">
+            <option value="lose">Lose weight (&minus;500 kcal/day)</option>
+            <option value="maintain">Maintain weight</option>
+            <option value="gain">Gain weight (+300 kcal/day)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="gProtein">Protein (g per kg body weight)</label>
+          <input type="number" id="gProtein" min="1" max="3" step="0.1" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label for="gFatPct">Fat (% of calories)</label>
+          <input type="number" id="gFatPct" min="15" max="45" step="1" inputmode="numeric">
+        </div>
+        <div class="field span2">
+          <button type="submit" class="btn">Save &amp; recalculate</button>
+          <span class="muted small" id="goalsSaved"></span>
+        </div>
+      </form>
+    </section>
+    <section class="card"><div id="targetSummary"></div></section>
+    <section class="card">
+      <h2 class="h2">Your data</h2>
+      <p class="muted small">Your log is stored only on this device, in your browser. Nothing is uploaded.</p>
+      <div class="inline">
+        <button class="ghost" id="exportCsv" type="button">Export my log (CSV)</button>
+        <button class="ghost danger" id="resetAll" type="button">Reset all data</button>
+      </div>
+    </section>
+  </section>
+
+  <section class="view hidden" id="view-foods">
+    <h1 class="h1">Food database</h1>
+    <p class="muted"><span id="foodCount">7,756</span> foods from the USDA SR Legacy database. Values are per 100&nbsp;g.</p>
+    <div class="searchbar">
+      <input type="search" id="browseSearch" placeholder="Search foods&hellip;" autocomplete="off">
+      <select id="browseCat"><option value="">All categories</option></select>
+    </div>
+    <div id="browseResults" class="foodrows"></div>
+  </section>
+</main>
+
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 class="h2" id="modalTitle">Add food</h2>
+      <button class="ghost" id="modalClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="picked hidden" id="picked"></div>
+    <div class="searchbar">
+      <input type="search" id="pickerSearch" placeholder="Search 7,756 foods&hellip;" autocomplete="off">
+      <select id="pickerCat"><option value="">All categories</option></select>
+    </div>
+    <div class="foodrows" id="pickerResults"></div>
+  </div>
+</div>
+
+<footer class="app-footer"><div class="wrap"><a href="/">CalorieBase</a> &mdash; calorie &amp; nutrition data for thousands of foods.</div></footer>
+
+<script src="app.js"></script>
+</body>
+</html>

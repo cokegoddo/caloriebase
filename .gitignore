@@ -4,3 +4,8 @@ data/SR-Leg_ASC.zip
 # python
 __pycache__/
 *.pyc
+
+# desktop app build outputs (app itself is not published with the site)
+desktop/bin/
+desktop/obj/
+desktop/installer/

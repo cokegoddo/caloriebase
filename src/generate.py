@@ -594,7 +594,7 @@ def render_category(gcode, gname, foods):
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="site-header"><div class="wrap"><a class="brand" href="/">{SITE_NAME}</a><nav><a href="/">Home</a> · <a href="/popular/">Popular foods</a></nav></div></header>
+<header class="site-header"><div class="wrap"><a class="brand" href="/">{SITE_NAME}</a><nav><a href="/">Home</a> · <a href="/popular/">Popular foods</a> · <a href="/tracker/">Tracker</a></nav></div></header>
 <main class="wrap">
 <nav class="crumbs"><a href="/">Home</a> &raquo; <span>{esc(gname)}</span></nav>
 <h1>Calories in {esc(gname)} foods</h1>
@@ -637,10 +637,15 @@ def render_home(groups, by_group, popular):
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="site-header"><div class="wrap"><a class="brand" href="/">{SITE_NAME}</a><nav><a href="/">Home</a> · <a href="/popular/">Popular foods</a></nav></div></header>
+<header class="site-header"><div class="wrap"><a class="brand" href="/">{SITE_NAME}</a><nav><a href="/">Home</a> · <a href="/popular/">Popular foods</a> · <a href="/tracker/">Tracker</a></nav></div></header>
 <main class="wrap">
 <h1>{SITE_NAME}</h1>
 <p class="lead">{SITE_TAGLINE}. Every food page shows calories, protein, carbs, fat, fiber and sugar per 100 g, plus common serving sizes.</p>
+<section class="card cta">
+  <h2>Track your calories &amp; macros</h2>
+  <p class="lead" style="margin:0 0 14px">Use the free Calorie &amp; Macro Tracker to log what you eat and see calories, protein, carbs and fat against your goals. It runs in your browser, works on your phone, and saves your log automatically &mdash; no account needed.</p>
+  <p style="margin:0"><a class="btn" href="/tracker/">Open the Tracker &rarr;</a></p>
+</section>
 <section class="card">
   <h2>Browse by category</h2>
   <div class="cats">{''.join(cards)}</div>
@@ -674,7 +679,7 @@ def render_popular(popular):
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<header class="site-header"><div class="wrap"><a class="brand" href="/">{SITE_NAME}</a><nav><a href="/">Home</a> · <a href="/popular/">Popular foods</a></nav></div></header>
+<header class="site-header"><div class="wrap"><a class="brand" href="/">{SITE_NAME}</a><nav><a href="/">Home</a> · <a href="/popular/">Popular foods</a> · <a href="/tracker/">Tracker</a></nav></div></header>
 <main class="wrap">
 <nav class="crumbs"><a href="/">Home</a> &raquo; <span>Popular foods</span></nav>
 <h1>Popular foods</h1>
@@ -711,6 +716,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .cat{display:block;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--ink);background:#fff}
 .cat:hover{border-color:var(--accent)}
 .cat-name{display:block;font-weight:600}
+.card.cta{border-color:var(--accent);background:linear-gradient(180deg,#f2fbf4,#fff)}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:8px}
+.btn:hover{filter:brightness(1.06)}
 .food-list{columns:2;column-gap:36px;margin:0;padding-left:20px;font-size:15px}
 .food-list li{margin:0 0 6px;break-inside:avoid}
 .related{columns:2;column-gap:36px;margin:0;padding-left:20px;font-size:15px}
@@ -787,6 +795,7 @@ def main():
 
     sitemap = []
     sitemap.append(("0.9", BASE_URL + "/"))
+    sitemap.append(("0.8", BASE_URL + "/tracker/"))
     sitemap.append(("0.6", BASE_URL + "/popular/"))
 
     cat_slugs = {}
@@ -815,10 +824,43 @@ def main():
     robots = f"User-agent: *\nAllow: /\n\nSitemap: {BASE_URL}/sitemap.xml\n"
     write_file(os.path.join(out, "robots.txt"), robots)
 
-    # Search index for the homepage search box
-    index = [{"n": f.name, "u": f.url, "c": groups.get(f.group_code, ""), "k": f.kcal}
-             for f in foods]
-    write_file(os.path.join(out, "foods.json"), json.dumps(index))
+    # Search index + per-100g macros + common servings. Used by the homepage
+    # search box AND the /tracker/ web app. Kept compact (no whitespace).
+    index = []
+    for food in foods:
+        nut = food.nutrients
+        item = {
+            "n": food.name,
+            "u": food.url,
+            "c": groups.get(food.group_code, ""),
+            "k": round(food.kcal, 1),
+        }
+        for key, nno in (("p", "203"), ("cb", "205"), ("f", "204")):
+            val = nut.get(nno)
+            item[key] = round(val, 1) if val is not None else None
+        servings = []
+        for _amt, desc, grams in food.servings:
+            if desc and grams and grams > 0:
+                servings.append({"d": desc, "g": round(grams, 1)})
+            if len(servings) >= 3:
+                break
+        if servings:
+            item["sv"] = servings
+        index.append(item)
+    write_file(os.path.join(out, "foods.json"),
+               json.dumps(index, separators=(",", ":")))
+
+    # Static tracking web app. Files live in templates/tracker and are copied
+    # into /tracker/ on every build (out/ is wiped at the start of each build).
+    tracker_src = os.path.join(os.path.dirname(__file__), "..", "templates", "tracker")
+    if os.path.isdir(tracker_src):
+        tracker_dst = os.path.join(out, "tracker")
+        os.makedirs(tracker_dst, exist_ok=True)
+        for name in os.listdir(tracker_src):
+            src_path = os.path.join(tracker_src, name)
+            if os.path.isfile(src_path):
+                shutil.copyfile(src_path, os.path.join(tracker_dst, name))
+        print(f"Copied tracker app -> {tracker_dst}")
 
     print(f"Built {len(foods)} food pages, {len(by_group)} categories -> {out}")
     print(f"Total foods with calorie data available: {len(foods)}")

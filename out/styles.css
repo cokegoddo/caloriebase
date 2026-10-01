@@ -20,6 +20,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .cat{display:block;border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--ink);background:#fff}
 .cat:hover{border-color:var(--accent)}
 .cat-name{display:block;font-weight:600}
+.card.cta{border-color:var(--accent);background:linear-gradient(180deg,#f2fbf4,#fff)}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:10px 18px;border-radius:8px}
+.btn:hover{filter:brightness(1.06)}
 .food-list{columns:2;column-gap:36px;margin:0;padding-left:20px;font-size:15px}
 .food-list li{margin:0 0 6px;break-inside:avoid}
 .related{columns:2;column-gap:36px;margin:0;padding-left:20px;font-size:15px}
