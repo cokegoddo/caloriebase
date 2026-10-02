@@ -49,6 +49,15 @@
     return n ? n.split(' ').map(plural).join(' ') : '';
   }
   function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function fmtAmt(a) {
+    var n = (a === null || a === undefined || a === '') ? 1 : +a;
+    if (!isFinite(n) || n === 0) n = 1;
+    return (Math.round(n * 100) / 100).toString();
+  }
+  // "6 inch sub (196 g)" from a USDA serving measure.
+  function servingLabel(s) {
+    return fmtAmt(s.a) + (s.d ? ' ' + s.d : '') + ' (' + r0(s.g) + ' g)';
+  }
   function addDays(dk, n) { var d = parseISO(dk); d.setDate(d.getDate() + n); return iso(d); }
 
   /* ---------- persistence ---------- */
@@ -396,7 +405,7 @@
     var serving = '';
     if (o.sv && o.sv.length) {
       var s0 = o.sv[0];
-      if (s0.g && s0.g > 0) serving = ' \u00b7 1 ' + esc(s0.d) + ' \u2248 ' + r0(s0.g) + 'g';
+      if (s0.g && s0.g > 0) serving = ' \u00b7 ' + esc(servingLabel(s0));
     }
     return '<div class="foodrow" data-name="' + esc(o.n) + '">' +
       '<div class="fr-main">' +
@@ -459,26 +468,50 @@
   function pickFood(name) {
     pickedFood = DB.find(function (o) { return o.n === name; });
     if (!pickedFood) return;
-    var defG = (pickedFood.sv && pickedFood.sv[0] && pickedFood.sv[0].g) ? r0(pickedFood.sv[0].g) : 100;
-    var chips = (pickedFood.sv || []).filter(function (s) { return s.g > 0; }).map(function (s) {
-      return '<button class="chip" type="button" data-serving="' + s.g + '">1 ' + esc(s.d) + ' (' + r0(s.g) + 'g)</button>';
-    }).join('');
+    var sv = (pickedFood.sv || []).filter(function (s) { return s.g > 0; });
+    var defG = sv.length ? r0(sv[0].g) : 100;
+    var opts = sv.map(function (s, i) {
+      return '<option value="' + i + '"' + (i === 0 ? ' selected' : '') + '>' +
+        esc(servingLabel(s)) + '</option>';
+    }).join('') + '<option value="custom">Custom amount (grams)</option>';
     $('#picked').innerHTML =
       '<div class="pk-name">' + esc(pickedFood.n) + '</div>' +
       '<div class="muted small">' + r0(pickedFood.k) + ' kcal \u00b7 P ' + r1(pickedFood.p) + ' \u00b7 C ' + r1(pickedFood.cb) + ' \u00b7 F ' + r1(pickedFood.f) + ' per 100g</div>' +
       '<div class="pk-controls">' +
-      '<span class="small muted">Amount (g)</span>' +
-      '<input class="pk-grams" type="number" min="0" step="1" inputmode="decimal" value="' + defG + '">' +
-      (chips ? '<span class="small muted">or</span>' + chips : '') +
+      '<label class="small muted">Serving size<select class="pk-serve">' + opts + '</select></label>' +
+      '<label class="small muted">Servings<input class="pk-qty" type="number" min="0.25" step="0.25" inputmode="decimal" value="1"></label>' +
+      '<input class="pk-grams hidden" type="number" min="0" step="1" inputmode="decimal" value="' + defG + '">' +
+      '<span class="pk-total small"></span>' +
       '<button class="btn" type="button" id="confirmAdd">Add to ' + esc(pickerMeal) + '</button>' +
       '</div>';
     $('#picked').classList.remove('hidden');
+    updatePickedTotal();
+  }
+
+  function pickedServingGrams() {
+    var sel = $('.pk-serve');
+    if (!sel || sel.value === 'custom') return +$('.pk-grams').value || 0;
+    var sv = (pickedFood.sv || []).filter(function (s) { return s.g > 0; });
+    var s = sv[+sel.value];
+    return s ? s.g : 0;
+  }
+
+  function updatePickedTotal() {
+    var sel = $('.pk-serve');
+    var custom = !sel || sel.value === 'custom';
+    var gi = $('.pk-grams');
+    if (gi) gi.classList.toggle('hidden', !custom);
+    var q = (+($('.pk-qty') ? $('.pk-qty').value : 1)) || 0;
+    var total = pickedServingGrams() * q;
+    var t = $('.pk-total');
+    if (t) t.textContent = total > 0 ? '= ' + r0(total) + ' g' : '';
   }
 
   function confirmAdd() {
     if (!pickedFood) return;
-    var g = +$('.pk-grams').value || 0;
-    if (g <= 0) { $('.pk-grams').focus(); return; }
+    var q = (+($('.pk-qty') ? $('.pk-qty').value : 1)) || 0;
+    var g = Math.round(pickedServingGrams() * q * 10) / 10;
+    if (g <= 0) { if ($('.pk-grams')) $('.pk-grams').focus(); return; }
     var list = getMeal(currentDate, pickerMeal, true);
     list.push({
       id: uid(), n: pickedFood.n, g: g,
@@ -564,9 +597,13 @@
       if (row && row.dataset.name) pickFood(row.dataset.name);
     });
     $('#picked').addEventListener('click', function (e) {
-      var chip = e.target.closest('[data-serving]');
-      if (chip) { $('.pk-grams').value = chip.dataset.serving; }
       if (e.target.closest('#confirmAdd')) confirmAdd();
+    });
+    $('#picked').addEventListener('change', function (e) {
+      if (e.target.closest('.pk-serve, .pk-qty, .pk-grams')) updatePickedTotal();
+    });
+    $('#picked').addEventListener('input', function (e) {
+      if (e.target.closest('.pk-qty, .pk-grams')) updatePickedTotal();
     });
 
     // browse

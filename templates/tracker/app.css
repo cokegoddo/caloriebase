@@ -150,7 +150,11 @@ h1.h1:first-child,h1+h2{margin-top:0}
 .picked{background:var(--accent-soft);border:1px solid #bfe3c9;border-radius:10px;padding:12px;margin-bottom:12px}
 .picked .pk-name{font-weight:700;margin-bottom:2px}
 .picked .pk-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.picked .pk-controls label{display:flex;flex-direction:column;gap:3px;font-weight:600}
+.picked select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;max-width:100%}
+.picked .pk-total{font-weight:700;color:var(--accent);min-width:52px}
 .picked input{width:90px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;text-align:right}
+.picked input.pk-qty{width:72px}
 .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font:inherit;font-size:13px;
       font-weight:600;cursor:pointer;color:var(--ink)}
 .chip:hover{border-color:var(--accent);color:var(--accent)}

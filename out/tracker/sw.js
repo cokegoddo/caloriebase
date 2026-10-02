@@ -1,5 +1,5 @@
 /* CalorieBase Tracker service worker: offline support + installability. */
-var CACHE = 'cbtracker-v2';
+var CACHE = 'cbtracker-v3';
 var ASSETS = [
   './',
   './index.html',

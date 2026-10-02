@@ -881,9 +881,10 @@ def main():
             val = nut.get(nno)
             item[key] = round(val, 1) if val is not None else None
         servings = []
-        for _amt, desc, grams in food.servings:
+        for amt, desc, grams in food.servings:
             if desc and grams and grams > 0:
-                servings.append({"d": desc, "g": round(grams, 1)})
+                servings.append({"d": desc, "g": round(grams, 1),
+                                 "a": round(amt, 2) if amt else 1})
             if len(servings) >= 3:
                 break
         if servings:
